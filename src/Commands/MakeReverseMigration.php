@@ -41,8 +41,6 @@ class MakeReverseMigration extends Command
         $tableName = lcfirst($this->argument('table_name'));
         $migrationName = camel_case($tableName);
         $columns = $this->setColumns($tableName);
-        dd($columns);
-
     }
 
     /**
@@ -53,7 +51,13 @@ class MakeReverseMigration extends Command
      */
     private function setColumns($tableName)
     {
-        return \DB::select('SHOW COLUMNS FROM '.$tableName);
+        $columns = \DB::select('SHOW COLUMNS FROM '.$tableName);
+        dd($columns);
+        $createStatement = \DB::select('SHOW CREATE TABLE '.$tableName)[0]->{'Create Table'};
+        dd(explode("\n", $createStatement));
+        $a = preg_match_all("/`(.+)` (\w+)\(? ?(\d*) ?\)?/", $createStatement, $_matches, PREG_SET_ORDER);
+        dd($_matches);
+        return explode(',',$createStatement);
     }
 
 
