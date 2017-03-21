@@ -20,7 +20,11 @@ Add package's service provider to your config/app.php
 ```
 ### Usage
 ```bash
-$ php artisan make:reverseMigration table_name
+$ php artisan make:reverseMigration --create=users
+```
+or
+```bash
+$ php artisan make:reverseMigration --all
 ```
 
 ### Author

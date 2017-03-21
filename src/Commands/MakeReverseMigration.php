@@ -10,7 +10,7 @@ class MakeReverseMigration extends Command
      *
      * @var string
      */
-    protected $signature = 'make:reverseMigration {table_name}';
+    protected $signature = 'make:reverseMigration {--create=} {--all}';
 
     /**
      * The console command description.
@@ -22,6 +22,28 @@ class MakeReverseMigration extends Command
      * @var array $ignoredColumns
      */
     private $ignoredColumns = ['created_at', 'updated_at', 'deleted_at'];
+    private $morph = [
+        'text'       => 'text',
+        'int'        => 'integer',
+        'varchar'    => 'string',
+        'tinyint'    => 'tinyInteger',
+        'bigint'     => 'bigInteger',
+        'smallint'   => 'smallInteger',
+        'mediumint'  => 'mediumInteger',
+        'blob'       => 'binary',
+        'char'       => 'char',
+        'text'       => 'text',
+        'mediumtext' => 'mediumText',
+        'enum'       => 'enum',
+        'decimal'    => 'decimal',
+        'double'     => 'double',
+        'bool'       => 'boolean',
+        'boolean'    => 'boolean',
+        'timestamp'  => 'timestamp',
+        'date'       => 'date',
+        'datetime'   => 'timestamp',
+        'time'       => 'time'
+    ];
 
     /**
      * Create a new command instance.
@@ -40,7 +62,23 @@ class MakeReverseMigration extends Command
      */
     public function handle()
     {
-        $tableName = snake_case($this->argument('table_name'));
+        $dbName = \DB::connection()
+                     ->getDatabaseName();
+
+        if ($this->option('all')) {
+            $tables = $this->getAllTables();
+            foreach ($tables as $table) {
+                $tableName = $table->{'Tables_in_' . $dbName};
+                $this->generate($tableName);
+            }
+        } else if ($this->option('create')) {
+            $tableName = snake_case($this->option('create'));
+            $this->generate($tableName);
+        }
+    }
+
+    private function generate($tableName)
+    {
         $migrationName = $this->getMigrationName($tableName);
         $string = $this->getFields($tableName);
         $keys = $this->getKeys($tableName);
@@ -57,12 +95,13 @@ class MakeReverseMigration extends Command
 
         if ($typeName == "int" && $column->Extra == "auto_increment") {
             $result = "->increments('" . $column->Field . "')";
-        } else if ($typeName == "int") {
-            $result = "->integer('" . $column->Field . "')";
         } else if ($typeName == "varchar") {
             $result = "->string('" . $column->Field . "'" . $length . ")";
-        } else if ($typeName == "timestamp") {
-            $result = "->timestamp('" . $column->Field . "')";
+        } else {
+            if($typeName == 'decimal'){ //decimal check
+            }
+            $result = "->".$this->morph[$typeName]."('" . $column->Field . "')";
+
         }
         $result .= $this->getUnsigned($array);
         $result .= $this->getUnique($column->Key);
@@ -254,5 +293,12 @@ class MakeReverseMigration extends Command
     private function getMigrationName($tableName)
     {
         return date('Y_m_d_His') . '_create_' . $tableName . '_table';
+    }
+
+    private function getAllTables()
+    {
+        $tables = \DB::select('SHOW TABLES');
+        return $tables;
+
     }
 }
