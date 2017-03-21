@@ -37,6 +37,7 @@ class MakeReverseMigration extends Command
         'enum'       => 'enum',
         'decimal'    => 'decimal',
         'double'     => 'double',
+        'float'      => 'float',
         'bool'       => 'boolean',
         'boolean'    => 'boolean',
         'timestamp'  => 'timestamp',
@@ -91,16 +92,23 @@ class MakeReverseMigration extends Command
         $result = "";
         $array = explode(" ", $column->Type);
         $typeName = $this->getTypeName($array[0]);
-        $length = $this->getLength($array[0]);
+        $length = $this->getLength($array[0], $typeName);
 
         if ($typeName == "int" && $column->Extra == "auto_increment") {
             $result = "->increments('" . $column->Field . "')";
         } else if ($typeName == "varchar") {
             $result = "->string('" . $column->Field . "'" . $length . ")";
+        } else if($typeName == "char"){
+            $result = "->char('" . $column->Field . "'".$length.")";
         } else {
-            if($typeName == 'decimal'){ //decimal check
+            if ($typeName == 'decimal' || $typeName == 'double' || $typeName == 'float' ) { //decimal check
+                preg_match('#\((.*?)\)#', $array[0], $length);
+                $length = ", ".str_replace(',',', ',$length[1]);
+                $result = "->" . $this->morph[$typeName] . "('" . $column->Field . "'".$length.")";
             }
-            $result = "->".$this->morph[$typeName]."('" . $column->Field . "')";
+            else{
+                    $result = "->" . $this->morph[$typeName] . "('" . $column->Field . "')";
+            }
 
         }
         $result .= $this->getUnsigned($array);
