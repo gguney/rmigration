@@ -23,6 +23,13 @@
         "psr-4": {
             "GGuney\\RMigration\\": "src/"
         }
+    },
+    "extra":{
+        "laravel":{
+            "providers": [
+                "GGuney\\RMigration\\RMigrationerviceProvider"
+            ]
+        }
     }
 }
 
