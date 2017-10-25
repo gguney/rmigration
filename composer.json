@@ -27,7 +27,7 @@
     "extra":{
         "laravel":{
             "providers": [
-                "GGuney\\RMigration\\RMigrationerviceProvider"
+                "GGuney\\RMigration\\RMigrationServiceProvider"
             ]
         }
     }
